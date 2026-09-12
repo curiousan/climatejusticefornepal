@@ -1,0 +1,42 @@
+{
+  "event": "Nepal floods · 26 August 2026",
+  "verifiedAt": "2026-09-11",
+  "metrics": {
+    "deaths": {
+      "value": 1367,
+      "display": "1,367",
+      "label": "Lives lost",
+      "asOf": "2026-09-09",
+      "source": "UN News / UNSDG",
+      "url": "https://unsdg.un.org/latest/stories/flood-ravaged-nepal-calls-climate-justice",
+      "note": "Confirmed deaths reported by the UN."
+    },
+    "missing": {
+      "value": 5132,
+      "display": "5,132",
+      "label": "People missing",
+      "asOf": "2026-09-09",
+      "source": "UN News / UNSDG",
+      "url": "https://unsdg.un.org/latest/stories/flood-ravaged-nepal-calls-climate-justice",
+      "note": "People reported missing by the UN; the figure may be revised."
+    },
+    "homes": {
+      "value": 27500,
+      "display": "~27,500",
+      "label": "Homes damaged or destroyed",
+      "asOf": "2026-09-08",
+      "source": "Associated Press",
+      "url": "https://apnews.com/article/54356ff1125e24493c003916e2280e03",
+      "note": "Approximate total of destroyed homes plus separately reported additional homes requiring rebuilding."
+    },
+    "damage": {
+      "value": 2560000000,
+      "display": "$2.56B",
+      "label": "Estimated damage · USD",
+      "asOf": "2026-09-08",
+      "source": "Associated Press",
+      "url": "https://apnews.com/article/54356ff1125e24493c003916e2280e03",
+      "note": "Preliminary estimate for property, housing and infrastructure; not a final assessment."
+    }
+  }
+}

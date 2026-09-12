@@ -1,0 +1,11 @@
+{
+  "name": "climate-justice-for-nepal",
+  "private": true,
+  "version": "1.0.0",
+  "description": "An independent climate justice awareness and relief website for Nepal.",
+  "scripts": {
+    "dev": "python3 server.py",
+    "start": "python3 server.py",
+    "test": "python3 -m unittest discover -s tests"
+  }
+}
