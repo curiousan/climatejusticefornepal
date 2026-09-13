@@ -1,36 +1,36 @@
 [
   {
-    "overlay_text": "The average person in the United States emits far more CO₂ each year than the average person in Nepal.",
-    "source": "Our World in Data",
-    "source link": "https://ourworldindata.org/co2-emissions",
+    "overlay_text": "The average American accounts for as much CO₂ in about 16 days as the average Nepali does in a year.",
+    "source": "Our World in Data · 2024 national averages · fossil fuel & industry CO₂",
+    "source link": "https://ourworldindata.org/grapher/co-emissions-per-capita?tab=table&time=2024&country=USA~NPL",
     "image": "flood-aerial-village-2.webp",
     "image_caption": "Nuwakot district, Nepal, Saturday, Aug. 29, 2026. (AP Photo/Rajesh Kumar Singh)"
   },
   {
-    "overlay_text": "Every flight has a measurable carbon cost. ICAO’s calculator estimates it route by route.",
-    "source": "ICAO Carbon Calculator",
-    "source link": "https://www.icao.int/environmental-protection/CarbonOffset/Pages/default.aspx",
+    "overlay_text": "One person in Germany accounts for roughly as much annual CO₂ as 11 people in Nepal, based on national averages.",
+    "source": "Our World in Data · 2024 national averages · fossil fuel & industry CO₂",
+    "source link": "https://ourworldindata.org/grapher/co-emissions-per-capita?tab=table&time=2024&country=DEU~NPL",
     "image": "dead-victim-flood.webp",
     "image_caption": "Kathmandu, Nepal, Tuesday, Sept. 1, 2026. (AP Photo/Niranjan Shrestha)"
   },
   {
-    "overlay_text": "Air travel is one of the most carbon-intensive choices an individual can make.",
-    "source": "Our World in Data",
-    "source link": "https://ourworldindata.org/carbon-footprint-flying",
+    "overlay_text": "At its 2024 emission rate, China produces Nepal’s entire historical CO₂ total in about one week.",
+    "source": "Our World in Data · China’s 2024 rate; Nepal’s total through 2024 · fossil fuel & industry CO₂",
+    "source link": "https://ourworldindata.org/profile/co2/china",
     "image": "aftermath-village-aerial.webp",
     "image_caption": "Trishuli Bazaar area of Nuwakot district, Nepal, Sunday, Aug. 30, 2026. (AP Photo/Rajesh Kumar Singh) "
   },
   {
-    "overlay_text": "A typical petrol car emits about 4.6 tonnes of CO₂ in one year.",
-    "source": "EPA Vehicle Emissions",
+    "overlay_text": "One typical U.S. petrol car emits more CO₂ each year than seven average Nepalis combined.",
+    "source": "EPA + Our World in Data · annual tailpipe CO₂ vs Nepal’s 2024 national average",
     "source link": "https://www.epa.gov/greenvehicles/greenhouse-gas-emissions-typical-passenger-vehicle",
     "image": "rasuwa-flood-people-being-rescued.webp",
     "image_caption": "Nuwakot district, Nepal, Wednesday, Sept. 2, 2026. (AP Photo/Rajesh Kumar Singh)"
   },
   {
-    "overlay_text": "Of every 10,000 tonnes of historical global CO₂ emissions, Nepal contributed about one.",
-    "source": "Our World in Data",
-    "source link": "https://ourworldindata.org/contributions-global-warming",
+    "overlay_text": "Nepal has contributed only about 0.01% of the world’s historical CO₂ emissions.",
+    "source": "Our World in Data · cumulative through 2024 · fossil fuel & industry CO₂",
+    "source link": "https://ourworldindata.org/profile/co2/nepal",
     "image": "elderly-women-being-rescued.webp",
     "image_caption": "Nepal's Nuwakot district, Wednesday, Aug. 26, 2026. (AP Photo/Niranjan Shrestha)"
   }
