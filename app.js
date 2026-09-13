@@ -59,7 +59,11 @@ document.addEventListener('visibilitychange', () => {
 });
 
 // Count up once on entry; source-backed final values remain available to readers.
+// Leave time for the final browser paint before the one-second limit.
+const COUNTER_DURATION_MS = 800;
 const counterFrames = new WeakMap();
+const counterDeadlines = new WeakMap();
+const countedCounters = new WeakSet();
 const counterLabels = new WeakMap();
 const counterFormats = new Map();
 function formatCounter(target, value, decimals = Number(target.dataset.decimals || 0)) {
@@ -82,27 +86,39 @@ function clearCounterFit(target) {
   target.style.removeProperty('transform');
   target.style.removeProperty('transform-origin');
 }
-function animateCounters(targets) {
-  if (reducedMotion.matches) return;
-  // A shared clock keeps the percentages together as one sentence is revealed.
-  const start = performance.now();
+function cancelCounter(target) {
+  cancelAnimationFrame(counterFrames.get(target));
+  clearTimeout(counterDeadlines.get(target));
+  counterFrames.delete(target);
+  counterDeadlines.delete(target);
+}
+function finishCounter(target) {
+  cancelCounter(target);
+  target.textContent = formatCounter(target, Number(target.dataset.count));
+  if (target.closest('.hero-counter-value')) clearCounterFit(target);
+}
+function animateCounters(targets, start) {
   targets.forEach(target => {
+    if (countedCounters.has(target)) return;
+    countedCounters.add(target);
+    if (reducedMotion.matches || document.hidden || performance.now() - start >= COUNTER_DURATION_MS) {
+      finishCounter(target);
+      return;
+    }
     const total = Number(target.dataset.count);
-    const duration = Number(target.dataset.duration) || 1400;
     const animationDecimals = target.dataset.animationDecimals;
     const granular = animationDecimals !== undefined;
     const decimals = granular ? Number(animationDecimals) : Number(target.dataset.decimals || 0);
     const precision = 10 ** decimals;
     const fitDuringAnimation = granular && target.closest('.hero-counter-value');
-    if (granular) target.textContent = formatCounter(target, 0, decimals);
+    target.textContent = formatCounter(target, 0, decimals);
     // Keep the sentence at its final width while an extra decimal counts up.
     if (fitDuringAnimation) fitHeroCounter(target);
-    const tick = now => {
-      const progress = Math.min((now - start) / duration, 1);
+    const tick = () => {
+      if (!counterDeadlines.has(target)) return;
+      const progress = Math.min((performance.now() - start) / COUNTER_DURATION_MS, 1);
       if (progress === 1) {
-        target.textContent = formatCounter(target, total);
-        if (fitDuringAnimation) clearCounterFit(target);
-        counterFrames.delete(target);
+        finishCounter(target);
         return;
       }
       const eased = granular ? progress * progress * (3 - 2 * progress) : 1 - Math.pow(1 - progress, 3);
@@ -115,6 +131,9 @@ function animateCounters(targets) {
       if (fitDuringAnimation) fitHeroCounter(target);
       counterFrames.set(target, requestAnimationFrame(tick));
     };
+    // Finish on elapsed time even when animation frames arrive late or stop.
+    counterDeadlines.set(target, setTimeout(() => finishCounter(target),
+      Math.max(0, start + COUNTER_DURATION_MS - performance.now())));
     counterFrames.set(target, requestAnimationFrame(tick));
     if (fitDuringAnimation && document.fonts?.status !== 'loaded') {
       document.fonts?.ready.then(() => {
@@ -124,11 +143,11 @@ function animateCounters(targets) {
   });
 }
 const countObserver = new IntersectionObserver(entries => {
-  entries.filter(entry => entry.isIntersecting).forEach(({ target }) => {
+  entries.filter(entry => entry.isIntersecting).forEach(({ target, time }) => {
     countObserver.unobserve(target);
-    animateCounters([target]);
+    animateCounters([target], time);
   });
-}, { threshold: 0.5 });
+}, { threshold: 0 });
 const heroCounters = [];
 $$('[data-count]').forEach(element => {
   // A stable text equivalent avoids announcing intermediate animation values.
@@ -145,20 +164,19 @@ $$('[data-count]').forEach(element => {
 });
 if (heroCounters.length) {
   const heroCountObserver = new IntersectionObserver(entries => {
-    if (!entries.some(entry => entry.isIntersecting && entry.intersectionRatio >= 0.15)) return;
+    const visible = entries.filter(entry => entry.isIntersecting);
+    if (!visible.length) return;
     heroCountObserver.disconnect();
-    animateCounters(heroCounters);
-  }, { threshold: 0.15 });
+    animateCounters(heroCounters, Math.min(...visible.map(entry => entry.time)));
+  }, { threshold: 0 });
   heroCountObserver.observe($('#hero-title'));
 }
 reducedMotion.addEventListener('change', event => {
   if (!event.matches) return;
-  $$('[data-count]').forEach(element => {
-    cancelAnimationFrame(counterFrames.get(element));
-    counterFrames.delete(element);
-    element.textContent = formatCounter(element, Number(element.dataset.count));
-    if (element.dataset.animationDecimals !== undefined && element.closest('.hero-counter-value')) clearCounterFit(element);
-  });
+  $$('[data-count]').forEach(finishCounter);
+});
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) $$('[data-count]').filter(target => counterDeadlines.has(target)).forEach(finishCounter);
 });
 
 // Native dialogs provide keyboard focus management, Escape, and focus restoration.
@@ -241,8 +259,7 @@ function renderImpact(data) {
     const value = $(`[data-metric="${key}"]`);
     const source = $(`[data-source="${key}"]`);
     if (!value || !source) continue;
-    cancelAnimationFrame(counterFrames.get(value));
-    counterFrames.delete(value);
+    cancelCounter(value);
     value.dataset.count = String(key === 'damage' ? metric.value / 1_000_000_000 : metric.value);
     value.textContent = metric.display;
     if (counterLabels.has(value)) counterLabels.get(value).textContent = `${metric.display} ${metric.label}`;

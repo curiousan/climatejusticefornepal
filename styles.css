@@ -2830,14 +2830,28 @@ dialog {
 }
 
 .impact .section-heading {
-  align-items: stretch;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+  align-items: center;
+  gap: 20px 50px;
   border-bottom: 1px solid #cfd4c7;
   padding-bottom: 36px;
 }
 
-.impact .section-heading > div:first-child {
-  flex: 0 0 calc(33.333% - 20px);
+.impact .impact-heading {
+  grid-column: 1;
+  grid-row: 1;
   align-self: center;
+  text-align: center;
+}
+
+.impact-heading .eyebrow {
+  justify-content: center;
+}
+
+.impact-references {
+  grid-column: 2;
+  grid-row: 2;
 }
 
 .impact h2,
@@ -2850,9 +2864,10 @@ dialog {
 }
 
 .impact-summary {
-  flex: 0 1 66.667%;
-  max-width: 720px;
-  margin-left: auto;
+  grid-column: 2;
+  grid-row: 1;
+  max-width: none;
+  margin-left: 0;
   align-self: center;
 }
 
@@ -2861,6 +2876,20 @@ dialog {
 .help-intro p {
   font-size: clamp(.9375rem, 1.15vw, 1.0625rem);
   line-height: 1.75;
+}
+
+.impact-summary .event-narrative {
+  max-width: none;
+}
+
+.event-narrative + .event-narrative {
+  margin-top: 1em;
+}
+
+.event-sources {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 20px;
 }
 
 .report-badge {
@@ -3195,12 +3224,15 @@ dialog {
 
 @media (max-width: 800px) {
   .impact .section-heading {
+    grid-template-columns: minmax(0, 1fr);
     align-items: start;
   }
 
-  .impact .section-heading > div:first-child {
-    flex-basis: auto;
-    align-self: auto;
+  .impact .impact-heading,
+  .impact-summary,
+  .impact-references {
+    grid-column: 1;
+    grid-row: auto;
   }
 
   .impact-summary {
