@@ -37,11 +37,35 @@ On macOS 14, Playwright 1.62's frozen WebKit build rejected its driver's `PushAP
 
 ## Personalize and publish
 
-The footer contact links are configured in `site.config.js`; set `publicUrl` there before publishing. Update the page title, description, and sharing metadata in `index.html` for your domain. Upload `index.html`, `styles.css`, `app.js`, `carousel.js`, `site.config.js`, `assets`, `images`, `videos/aerial-loop.mp4`, `data/impact.json`, and `data/emission-contribution.json` to any static host; no Python process is needed in production. The Python server and refresh script are local maintenance tools.
+The footer contact links and production sharing URL are configured in `site.config.js`. The production address is `https://climatejusticefornepal.org/`. If the domain changes, update `publicUrl`, the canonical URL, social metadata, and JSON-LD in `index.html`, plus `robots.txt` and `sitemap.xml` together. Upload `index.html`, `robots.txt`, `sitemap.xml`, `styles.css`, `app.js`, `carousel.js`, `site.config.js`, `assets`, `images`, `videos/aerial-loop.mp4`, `data/impact.json`, and `data/emission-contribution.json` to the host's public root; no Python process is needed in production. The Python server and refresh script are local maintenance tools.
 
 The original supplied footage remains at `videos/aerial-video1.mp4`. The hero uses `videos/aerial-loop.mp4`, a smaller, silent 13-second extract starting at 1 second, with Associated Press credit. The starter gallery images are frames extracted from that supplied footage, not independently dated photographs. Their captions credit the supplied video without inventing a photographer or recording date.
 
 The hero calls on major polluters to help repay their climate debt by supporting Nepal’s recovery. “The climate debt owed to Nepal” explains the 26 August collapse, how warming increases the risk of such disasters, and the case for compensation and recovery funding. The wording presents climate debt as a demand for responsibility; it does not assert that a court has awarded compensation or that climate change was the sole cause of this particular collapse. Links accompany the explanation to AP, Our World in Data, the UN report, and Al Jazeera’s analysis.
+
+## Search visibility and GitHub Pages setup
+
+The HTML includes the page title and description, canonical HTTPS URL, an indexing directive, `WebSite` and `WebPage` JSON-LD, and Open Graph and X/Twitter preview metadata. These are present without JavaScript. Social previews reuse the existing Reuters photograph; its credit is retained on the page and in the structured data. `robots.txt` allows crawling and points to the sitemap. The sitemap contains the single homepage; sections such as `#impact` are not separate pages. It intentionally omits `lastmod` rather than implying the content is refreshed on every deployment.
+
+These files prepare the site for discovery but do not submit it to Google or fix hosting settings. Missing robots or sitemap files alone do not prevent indexing. Complete the following after publishing the changes.
+
+### GitHub Pages and domain settings
+
+1. Open [the repository's Pages settings](https://github.com/curiousan/climatejusticefornepal/settings/pages). Confirm the publishing source includes the updated files and the custom domain is `climatejusticefornepal.org`. For branch publishing, preserve the `CNAME` file GitHub creates in the publishing branch. For an Actions deployment, include the SEO files in the uploaded site artifact.
+2. At the DNS provider, configure the `www` subdomain as a `CNAME` pointing to `curiousan.github.io` (without the repository path). Keep the working apex-domain records. GitHub Pages can then redirect `www` to the configured apex domain and provision the appropriate HTTPS certificate. Follow [GitHub's custom-domain instructions](https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site/managing-a-custom-domain-for-your-github-pages-site).
+3. In Pages settings, enable **Enforce HTTPS** once the certificate is ready. DNS and certificate provisioning can take time. If the option remains unavailable or `www` reports a certificate error, follow [GitHub's HTTPS troubleshooting instructions](https://docs.github.com/en/pages/getting-started-with-github-pages/securing-your-github-pages-site-with-https).
+4. Verify that `http://climatejusticefornepal.org/`, `http://www.climatejusticefornepal.org/`, and `https://www.climatejusticefornepal.org/` redirect to `https://climatejusticefornepal.org/` without certificate errors. The final homepage must return HTTP 200. HTML canonical tags do not create these redirects.
+5. Confirm [robots.txt](https://climatejusticefornepal.org/robots.txt) and [sitemap.xml](https://climatejusticefornepal.org/sitemap.xml) return HTTP 200 with the expected text/XML, and [the social preview image](https://climatejusticefornepal.org/images/nepal_flood_reuters.jpg) loads. View the homepage's source and confirm it contains the new title, canonical URL, and JSON-LD.
+
+### Verify ownership and request Google indexing
+
+1. Open [Google Search Console](https://search.google.com/search-console/welcome) using the Google account that will manage the site. Add a **Domain** property for `climatejusticefornepal.org` (without `https://` or a path).
+2. Copy Google's exact verification TXT record into the domain's DNS settings, then select **Verify**. Keep that record after verification and preserve the website's existing DNS records. The verification value is account-specific; it is not included in this repository. See [Google's ownership-verification instructions](https://support.google.com/webmasters/answer/9008080).
+3. Under **Sitemaps**, submit `https://climatejusticefornepal.org/sitemap.xml` after the deployed file is reachable. Check that Google can read it successfully.
+4. Inspect `https://climatejusticefornepal.org/` using **URL Inspection**, run **Test live URL**, and review crawl/indexing eligibility. If eligible, select **Request indexing**. If Google reports a fetch, robots, or indexing problem, resolve that specific issue first.
+5. Monitor **Page indexing** and **Performance**. URL Inspection can reveal whether Google knows the URL, when it last crawled it, and which canonical URL it selected. Search Console supplies the actual indexing diagnosis; a search for the domain alone does not.
+
+Google can discover a site without Search Console, but verification provides diagnostics and access to indexing requests. Crawling can take days to weeks, and requests do not guarantee indexing or a particular ranking. See [Google's recrawl guidance](https://developers.google.com/search/docs/crawling-indexing/ask-google-to-recrawl). The site-name JSON-LD follows [Google's site-name guidance](https://developers.google.com/search/docs/appearance/site-names), and sharing metadata follows the [Open Graph protocol](https://ogp.me/).
 
 ## Add carousel photographs
 

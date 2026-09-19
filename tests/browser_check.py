@@ -101,7 +101,7 @@ with sync_playwright() as playwright:
     assert page.locator('#share-dialog').is_visible()
     page.evaluate("Object.defineProperty(navigator, 'clipboard', {value: {writeText: async (text) => window.copiedText = text}, configurable: true})")
     page.locator('#copy-link').click()
-    assert page.evaluate('window.copiedText') == BASE + '/'
+    assert page.evaluate('window.copiedText') == 'https://climatejusticefornepal.org/'
     page.locator('#copy-message').click()
     assert '0.01%' in page.evaluate('window.copiedText')
     page.keyboard.press('Escape')
