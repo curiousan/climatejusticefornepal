@@ -1,42 +1,100 @@
 {
   "event": "Nepal floods · 26 August 2026",
-  "verifiedAt": "2026-09-11",
+  "verifiedAt": "2026-09-20",
+  "gdp": {
+    "value": 45490000000,
+    "year": 2025,
+    "source": "World Bank",
+    "url": "https://data.worldbank.org/country/nepal"
+  },
   "metrics": {
     "deaths": {
-      "value": 1367,
-      "display": "1,367",
-      "label": "Lives lost",
-      "asOf": "2026-09-09",
-      "source": "UN News / UNSDG",
-      "url": "https://unsdg.un.org/latest/stories/flood-ravaged-nepal-calls-climate-justice",
-      "note": "Confirmed deaths reported by the UN."
+      "value": 1411,
+      "display": "1,411",
+      "label": "Reported deaths / remains",
+      "summary": "Recovery tally includes unidentified and partial remains.",
+      "asOf": "2026-09-19",
+      "source": "NDRRMA / Ministry of Finance",
+      "url": "https://mofnepal.github.io/rasuwa-flood-update/en/rescue/",
+      "note": "Official recovery tally includes 526 entries for human remains; it is not a count of individually identified victims.",
+      "unit": "count"
     },
     "missing": {
-      "value": 5132,
-      "display": "5,132",
-      "label": "People missing",
-      "asOf": "2026-09-09",
-      "source": "UN News / UNSDG",
-      "url": "https://unsdg.un.org/latest/stories/flood-ravaged-nepal-calls-climate-justice",
-      "note": "People reported missing by the UN; the figure may be revised."
+      "value": 5875,
+      "display": "5,875",
+      "label": "People reported missing",
+      "summary": "Provisional register; verification is continuing.",
+      "asOf": "2026-09-19",
+      "source": "NDRRMA / Ministry of Finance",
+      "url": "https://mofnepal.github.io/rasuwa-flood-update/en/rescue/",
+      "note": "May overlap with unidentified remains, rescued people or duplicate entries. Do not add this figure to the death tally.",
+      "unit": "count"
+    },
+    "injured": {
+      "value": 10041,
+      "display": "10,041",
+      "label": "Injured treated by security teams",
+      "summary": "Reported treatment count, not a complete injury toll.",
+      "asOf": "2026-09-19",
+      "source": "NDRRMA / Ministry of Finance",
+      "url": "https://mofnepal.github.io/rasuwa-flood-update/en/rescue/",
+      "note": "Security-agency treatment figure. Separately, 18 people were in hospital. The latest report does not provide a complete cumulative injury total; these categories are not added together.",
+      "unit": "count"
+    },
+    "rescued": {
+      "value": 13784,
+      "display": "13,784",
+      "label": "People rescued",
+      "summary": "Cumulative rescue count reported by NDRRMA.",
+      "asOf": "2026-09-19",
+      "source": "NDRRMA / Ministry of Finance",
+      "url": "https://mofnepal.github.io/rasuwa-flood-update/en/rescue/",
+      "note": "Reported rescues; this is not a count of people currently displaced.",
+      "unit": "count"
     },
     "homes": {
-      "value": 27500,
-      "display": "~27,500",
-      "label": "Homes damaged or destroyed",
-      "asOf": "2026-09-08",
-      "source": "Associated Press",
-      "url": "https://apnews.com/article/54356ff1125e24493c003916e2280e03",
-      "note": "Approximate total of destroyed homes plus separately reported additional homes requiring rebuilding."
+      "value": 7570,
+      "display": "7,570",
+      "label": "Private buildings damaged",
+      "summary": "RDNA assessment covering 8,317 households.",
+      "asOf": "2026-09-13",
+      "source": "Nepal Red Cross / RDNA",
+      "url": "https://nrcs.org/highlight/9/",
+      "note": "Government RDNA, summarized by Nepal Red Cross on 13 September. Counts damaged private buildings, not only destroyed homes. Replaces the earlier approximate housing figure; definitions differ.",
+      "unit": "count"
     },
     "damage": {
-      "value": 2560000000,
-      "display": "$2.56B",
-      "label": "Estimated damage · USD",
-      "asOf": "2026-09-08",
-      "source": "Associated Press",
-      "url": "https://apnews.com/article/54356ff1125e24493c003916e2280e03",
-      "note": "Preliminary estimate for property, housing and infrastructure; not a final assessment."
+      "value": 1800000000,
+      "display": "$1.80B",
+      "label": "Estimated physical damage",
+      "summary": "Buildings and infrastructure; initial RDNA estimate.",
+      "asOf": "2026-09-11",
+      "source": "Government of Nepal / MoFA",
+      "url": "https://mofa.gov.np/content/1884/the-ministry-s-regular-press-briefing--11-september/",
+      "note": "Rounded government estimate of physical damage, separate from economic losses and reconstruction needs. A fuller post-disaster assessment is still pending.",
+      "unit": "USD"
+    },
+    "losses": {
+      "value": 883000000,
+      "display": "$883M",
+      "label": "Estimated economic losses",
+      "summary": "Disrupted income and economic activity, in USD.",
+      "asOf": "2026-09-11",
+      "source": "Government of Nepal / MoFA",
+      "url": "https://mofa.gov.np/content/1884/the-ministry-s-regular-press-briefing--11-september/",
+      "note": "Rounded RDNA loss estimate. This is separate from damage to physical assets.",
+      "unit": "USD"
+    },
+    "recovery": {
+      "value": 4780000000,
+      "display": "$4.78B",
+      "label": "Recovery & reconstruction",
+      "summary": "Estimated funding needed to rebuild and recover.",
+      "asOf": "2026-09-11",
+      "source": "Government of Nepal / MoFA",
+      "url": "https://mofa.gov.np/content/1884/the-ministry-s-regular-press-briefing--11-september/",
+      "note": "Rounded government estimate of reconstruction requirements. It is not an additional damage amount and must not be added to damage and losses.",
+      "unit": "USD"
     }
   }
 }

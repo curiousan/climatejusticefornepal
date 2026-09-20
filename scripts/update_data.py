@@ -31,15 +31,19 @@ class Report:
 
 
 REPORTS = (
-    Report("UN News / UNSDG",
-           "https://unsdg.un.org/latest/stories/flood-ravaged-nepal-calls-climate-justice",
-           "Flood-Ravaged Nepal Calls for Climate Justice", "2026-09-09",
-           ("deaths", "missing")),
-    Report("Associated Press",
-           "https://apnews.com/article/54356ff1125e24493c003916e2280e03",
-           "Nepal endured months of political upheaval", "2026-09-08",
-           ("homes", "damage")),
+    Report("NDRRMA / Ministry of Finance",
+           "https://mofnepal.github.io/rasuwa-flood-update/en/rescue/",
+           "NDRRMA – Rasuwa Flood: Search, Rescue and Relief Update", "2026-09-19",
+           ("deaths", "missing", "injured", "rescued")),
+    Report("Nepal Red Cross / RDNA", "https://nrcs.org/highlight/9/",
+           "Rasuwa Flood Situation Update 8", "2026-09-13", ("homes",)),
+    Report("Government of Nepal / MoFA",
+           "https://mofa.gov.np/content/1884/the-ministry-s-regular-press-briefing--11-september/",
+           "The Ministry's regular Press Briefing- 11 September 2026", "2026-09-11",
+           ("damage", "losses", "recovery")),
 )
+METRICS = {key for report in REPORTS for key in report.metrics}
+
 
 
 class ReportHTML(HTMLParser):
@@ -89,50 +93,52 @@ def parse_report(html, report):
     if not re.search(r"\bNepal\b", text, re.I) or not re.search(r"\bfloods?\b", text, re.I):
         raise ValueError("The report is not about the Nepal floods")
     event_dates = re.findall(
-        r"(?:26\s+August|August\s+26|Aug\.?\s+26)(?:,?\s+(20\d{2}))?", text, re.I)
-    # This particular AP report uses a relative event reference. It is accepted
-    # only alongside its configured title and exact publication date below.
-    reviewed_relative_reference = (report.metrics == ("homes", "damage") and
-                                  "flash floods two weeks ago" in text.casefold())
-    if (not event_dates and not reviewed_relative_reference) or any(
-            year and year != "2026" for year in event_dates):
+        r"(?:26\s+Aug(?:ust)?|August\s+26|Aug\.?\s+26)(?:,?\s+(20\d{2}))?", text, re.I)
+    if not event_dates or any(year and year != "2026" for year in event_dates):
         raise ValueError("The report does not match the 26 August 2026 event")
-    # A page retrieval or dateModified timestamp is not a new statistical as-of date.
-    if document.dates:
-        if set(document.dates) != {report.published}:
-            raise ValueError("Publication date changed; manual review required")
-    else:
-        expected = date.fromisoformat(report.published)
-        date_pattern = rf"\b0?{expected.day}\s+{expected.strftime('%B')}\s+{expected.year}\b"
-        if not re.search(date_pattern, text, re.I):
-            raise ValueError("The reviewed publication date was not found")
 
-    if report.metrics == ("deaths", "missing"):
+    expected = date.fromisoformat(report.published)
+    if report.metrics == ("deaths", "missing", "injured", "rescued"):
+        # The portal header's update time is not the selected situation report's date.
+        heading = re.escape(report.title) + r"\s+·\s+[^·]+·\s+(\d{1,2} [A-Za-z]+ \d{4})"
+        dates = set(re.findall(heading, text))
+        if dates != {f"{expected.day} {expected.strftime('%b')} {expected.year}"}:
+            raise ValueError("Rescue report date changed; manual review required")
+        text = text.split(report.title, 1)[1].split("Nepal Police –", 1)[0]
+        # Keep treatment categories separate; the portal sum is not a unique injury toll.
         return {
-            "deaths": unique_number(NUMBER + r"\s+people\s+(?:are\s+)?confirmed\s+dead\b", text),
-            "missing": unique_number(NUMBER + r"\s+people\s+are\s+(?:still\s+)?missing\b", text),
+            "deaths": unique_number(r"\bCasualties\s+" + NUMBER, text),
+            "missing": unique_number(r"\bMissing\s+" + NUMBER + r"\s+Rasuwa", text),
+            "injured": unique_number(r"Treated by the security agencies\s+" + NUMBER, text),
+            "rescued": unique_number(r"\bRescued\s+" + NUMBER + r"\s+Helicopter", text),
         }
 
-    # Require explicit additional homes; never sum potentially overlapping categories.
-    homes_pattern = (NUMBER + r"\s+(?:homes|houses)\s+(?:were\s+|have\s+been\s+|are\s+)?"
-                     r"(?:confirmed\s+)?destroyed.{0,180}?"
-                     r"(?:another|an\s+additional)\s+(?:roughly\s+|about\s+)?" + NUMBER +
-                     r"\s+(?:(?:homes|houses)\s+)?(?:need|require|requiring|needing)"
-                     r".{0,45}?(?:rebuild|rebuilt|reconstruct)")
-    home_matches = re.findall(homes_pattern, text, re.I)
-    if len(home_matches) != 1:
-        raise ValueError("Missing or ambiguous separate housing categories")
-    homes = sum(int(value.replace(",", "")) for value in home_matches[0])
-    if not 1 <= homes <= 1_000_000:
-        raise ValueError("Housing total is outside the permitted range")
-    damage_matches = set(re.findall(
-        r"damage\s+estimate\s+(?:so\s+far\s+)?(?:of\s+)?\$([0-9]+(?:\.[0-9]+)?)\s+billion", text, re.I))
-    if len(damage_matches) != 1:
-        raise ValueError("Missing or ambiguous USD damage estimate")
-    damage = int(Decimal(damage_matches.pop()) * 1_000_000_000)
-    if not 1 <= damage <= 100_000_000_000:
-        raise ValueError("Damage estimate is outside the permitted range")
-    return {"homes": homes, "damage": damage}
+    if report.metrics == ("homes",):
+        heading = f"{report.title} ({expected.day} {expected.strftime('%B')} {expected.year})"
+        if heading not in text:
+            raise ValueError("The reviewed housing report date was not found")
+        text = text.rsplit(heading, 1)[1].split("Rasuwa Flood Response 2026", 1)[0]
+        return {"homes": unique_number(NUMBER + r"\s+private buildings has been damaged", text)}
+
+    if document.dates and set(document.dates) != {report.published}:
+        raise ValueError("Publication date changed; manual review required")
+    if not re.search(rf"\b{expected.day}\s+{expected.strftime('%B')}\s+{expected.year}\b", text):
+        raise ValueError("The reviewed publication date was not found")
+    values = {}
+    patterns = {
+        "damage": (r"total damage caused by the disaster is estimated at approximately USD ([0-9.]+) billion", 1_000_000_000),
+        "losses": (r"estimated loss is approximately USD ([0-9.]+) million", 1_000_000),
+        "recovery": (r"total estimated requirement for reconstruction is approximately USD ([0-9.]+) billion", 1_000_000_000),
+    }
+    for key, (pattern, multiplier) in patterns.items():
+        matches = set(re.findall(pattern, text, re.I))
+        if len(matches) != 1:
+            raise ValueError(f"Missing or ambiguous {key} estimate")
+        amount = Decimal(matches.pop()) * multiplier
+        if amount != amount.to_integral_value() or not 1 <= amount <= 100_000_000_000:
+            raise ValueError("USD estimate is outside the permitted range")
+        values[key] = int(amount)
+    return values
 
 
 def fetch_report(url):
@@ -153,12 +159,19 @@ def validate_snapshot(snapshot):
     if snapshot.get("event") != EVENT:
         raise ValueError("Snapshot event does not match")
     date.fromisoformat(snapshot["verifiedAt"])
-    if set(snapshot["metrics"]) != {"deaths", "missing", "homes", "damage"}:
-        raise ValueError("Snapshot must contain exactly the four displayed metrics")
+    if set(snapshot["metrics"]) != METRICS:
+        raise ValueError("Snapshot must contain exactly the eight displayed metrics")
+    gdp = snapshot["gdp"]
+    if type(gdp["value"]) is not int or gdp["value"] <= 0 or type(gdp["year"]) is not int:
+        raise ValueError("Invalid GDP comparison baseline")
+    if not gdp["url"].startswith("https://"):
+        raise ValueError("GDP needs an HTTPS source URL")
     for metric in snapshot["metrics"].values():
+        if metric["unit"] not in {"count", "USD"}:
+            raise ValueError("Unknown metric unit")
         if type(metric["value"]) is not int or metric["value"] < 0:
             raise ValueError("Metric values must be nonnegative integers")
-        for key in ("display", "label", "source", "note"):
+        for key in ("display", "label", "summary", "source", "note"):
             if not isinstance(metric[key], str) or not metric[key].strip():
                 raise ValueError(f"Missing metric field: {key}")
         if not metric["url"].startswith("https://"):
@@ -190,6 +203,14 @@ def refresh(path, check=False, fetch=fetch_report, today=None):
     validate_snapshot(original)
     candidate = copy.deepcopy(original)
     failures = []
+    # Check source compatibility before accessing the network, so old parsers cannot
+    # overwrite a newer manual review or silently leave new metrics unverified.
+    for report in REPORTS:
+        for key in report.metrics:
+            metric = original["metrics"][key]
+            if metric["url"] != report.url or metric["asOf"] != report.published:
+                print("Snapshot uses a newer/different reviewed source; update the parser first", file=sys.stderr)
+                return False
     for report in REPORTS:
         try:
             values = parse_report(fetch(report.url), report)
@@ -198,8 +219,8 @@ def refresh(path, check=False, fetch=fetch_report, today=None):
                 if metric["url"] != report.url or metric["asOf"] != report.published:
                     raise ValueError("Snapshot uses a newer/different reviewed source; update the parser first")
                 metric["value"] = value
-                metric["display"] = (f"${value / 1_000_000_000:g}B" if key == "damage"
-                                     else ("~" if key == "homes" else "") + f"{value:,}")
+                metric["display"] = (f"${value / 1_000_000_000:.2f}B" if value >= 1_000_000_000
+                                     else f"${value / 1_000_000:g}M") if metric["unit"] == "USD" else f"{value:,}"
             print(f"Verified {report.name}: report dated {report.published}")
         except (OSError, ValueError, UnicodeError) as error:
             failures.append(report.name)

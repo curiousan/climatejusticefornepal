@@ -2938,6 +2938,18 @@ dialog {
   border-bottom: 1px solid #cfd4c7;
 }
 
+@media (min-width: 801px) {
+  .impact-stat:nth-child(4n+1) {
+    border-left: 0;
+    padding-left: 0;
+  }
+
+  .impact-stat:nth-child(n+5) {
+    border-top: 1px solid #cfd4c7;
+    padding-top: 28px;
+  }
+}
+
 .stat-source-group {
   display: flex;
   flex-wrap: wrap;
