@@ -61,9 +61,9 @@ def check_case(browser, base, name, width, slowdown=1, delayed_frames=False):
     if slowdown != 1:
         context.new_cdp_session(page).send("Emulation.setCPUThrottlingRate", {"rate": slowdown})
     page.goto(base, wait_until="domcontentloaded")
-    for key in ["0.37", "0.01"]:
+    for key in ["0.36", "0.01"]:
         wait_for_counter(page, key)
-    for key in ["deaths", "missing", "homes", "damage"]:
+    for key in ["deaths", "missing", "injured", "rescued", "homes", "damage", "losses", "recovery"]:
         page.locator(f'[data-metric="{key}"]').scroll_into_view_if_needed()
         wait_for_counter(page, key)
     traces = page.evaluate("window.counterTrace")
@@ -76,7 +76,7 @@ def check_case(browser, base, name, width, slowdown=1, delayed_frames=False):
         elapsed = finish["time"] - beginning
         assert 0 < elapsed <= 1000, f"{name}: {key} took {elapsed:.0f} ms from first visibility"
         timings[key] = round(elapsed)
-    assert len(timings) == 6, f"{name}: did not exercise every counter"
+    assert len(timings) == 10, f"{name}: did not exercise every counter"
     before = {key: len(trace["changes"]) for key, trace in traces.items()}
     page.evaluate("window.scrollTo({top: 0, behavior: 'instant'})")
     page.locator('.impact-grid').scroll_into_view_if_needed()
@@ -94,7 +94,7 @@ def check_reduced_motion(browser, base):
     page.goto(base, wait_until="networkidle")
     page.locator('.impact-grid').scroll_into_view_if_needed()
     traces = page.evaluate("window.counterTrace")
-    assert len(traces) == 6
+    assert len(traces) == 10
     assert all(change["text"] == trace["expected"] for trace in traces.values() for change in trace["changes"])
     context.close()
     return {"case": "reduced-motion", "result": "PASS"}

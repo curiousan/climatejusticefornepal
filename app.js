@@ -236,8 +236,9 @@ $$('[data-contact]').forEach(link => {
 if (Object.values(siteConfig.contact).some(Boolean)) $('.contact-placeholder').hidden = true;
 
 // Cached snapshots keep the page useful offline. Fetch time never replaces report dates.
-const CACHE_KEY = 'nepal-impact-v1';
+const CACHE_KEY = 'nepal-impact-v2';
 const CACHE_TTL = 15 * 60 * 1000;
+const IMPACT_METRICS = ['deaths', 'missing', 'injured', 'rescued', 'homes', 'damage', 'losses', 'recovery'];
 function validDate(value) {
   if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
   const date = new Date(`${value}T00:00:00Z`);
@@ -245,11 +246,14 @@ function validDate(value) {
 }
 function validImpact(data) {
   return data?.event === 'Nepal floods · 26 August 2026' && data?.metrics &&
-    validDate(data.verifiedAt) && Object.keys(data.metrics).length === 4 && ['deaths', 'missing', 'homes', 'damage'].every(key => {
+    validDate(data.verifiedAt) && Number.isFinite(data.gdp?.value) && data.gdp.value > 0 &&
+    Number.isInteger(data.gdp.year) && /^https:\/\//.test(data.gdp.url) &&
+    Object.keys(data.metrics).length === IMPACT_METRICS.length && IMPACT_METRICS.every(key => {
     const metric = data.metrics[key];
     return metric && typeof metric.value === 'number' && Number.isFinite(metric.value) && metric.value >= 0 &&
-      typeof metric.display === 'string' && typeof metric.source === 'string' &&
-      validDate(metric.asOf) && /^https:\/\//.test(metric.url);
+      ['display', 'source', 'label', 'summary', 'note'].every(field => typeof metric[field] === 'string' && metric[field].trim()) &&
+      ['count', 'USD'].includes(metric.unit) && validDate(metric.asOf) &&
+      metric.asOf >= '2026-08-26' && metric.asOf <= data.verifiedAt && /^https:\/\//.test(metric.url);
   });
 }
 const formatDate = value => new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }).format(new Date(`${value}T00:00:00Z`));
@@ -260,12 +264,25 @@ function renderImpact(data) {
     const source = $(`[data-source="${key}"]`);
     if (!value || !source) continue;
     cancelCounter(value);
-    value.dataset.count = String(key === 'damage' ? metric.value / 1_000_000_000 : metric.value);
+    const monetary = metric.unit === 'USD';
+    const millions = monetary && metric.value < 1_000_000_000;
+    value.dataset.count = String(monetary ? metric.value / (millions ? 1_000_000 : 1_000_000_000) : metric.value);
+    value.dataset.decimals = monetary && !millions ? '2' : '0';
+    value.dataset.prefix = monetary ? '$' : '';
+    value.dataset.suffix = monetary ? (millions ? 'M' : 'B') : '';
     value.textContent = metric.display;
+    value.closest('article').querySelector('h3').textContent = metric.label;
+    value.closest('article').querySelector('p').textContent = metric.summary;
+    value.setAttribute('aria-label', `${metric.display} ${metric.label}`);
     if (counterLabels.has(value)) counterLabels.get(value).textContent = `${metric.display} ${metric.label}`;
     source.href = metric.url;
-    source.firstChild.textContent = `${metric.source.startsWith('UN') ? 'UN' : 'AP'} · ${formatDate(metric.asOf)} `;
+    source.firstChild.textContent = `${metric.source} · ${formatDate(metric.asOf)} `;
   }
+  const percent = (data.metrics.damage.value / data.gdp.value * 100).toFixed(1);
+  const comparison = `The estimated physical damage is approximately ${percent}% of Nepal’s ${data.gdp.year} GDP. This compares monetary values; it does not mean that share of the economy was destroyed.`;
+  $('[data-metric="damage"]').closest('article').querySelector('p').textContent = `${data.metrics.damage.summary} Approximately ${percent}% of Nepal’s ${data.gdp.year} GDP.`;
+  $('#economic-comparison').textContent = comparison;
+  $$('[data-gdp-source]').forEach(link => { link.href = data.gdp.url; });
   const dates = Object.values(data.metrics).map(metric => metric.asOf).sort();
   $('#report-date').textContent = dates[0] === dates.at(-1) ? formatDate(dates[0]) : `${formatDate(dates[0])} – ${formatDate(dates.at(-1))}`;
   $('#report-date').dateTime = dates.at(-1);

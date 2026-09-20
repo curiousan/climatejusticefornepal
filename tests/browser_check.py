@@ -31,7 +31,7 @@ def check_hero_counters(page):
     page.wait_for_function("""() => {
         const trace = window.heroCounterTrace;
         return trace.some(sample => sample.text.some(text => /^0\\.\\d{4}$/.test(text))) &&
-            trace.at(-1)?.text.join('|') === '0.37|0.01';
+            trace.at(-1)?.text.join('|') === '0.36|0.01';
     }""", timeout=8000)
     trace = page.evaluate('window.heroCounterTrace')
     start = next(index for index, sample in enumerate(trace)
@@ -40,7 +40,7 @@ def check_hero_counters(page):
     duration = animation[-1]['time'] - animation[0]['time']
     assert 0 < duration <= 1000, f'Hero counters must finish within 1 second, took {duration:.0f}ms'
     finish_times = []
-    for index, final_value in enumerate([0.37, 0.01]):
+    for index, final_value in enumerate([0.36, 0.01]):
         values = [float(sample['text'][index]) for sample in animation]
         assert all(before <= after for before, after in zip(values, values[1:])), 'Hero counter runs backward'
         assert values[-1] == final_value
@@ -71,15 +71,24 @@ with sync_playwright() as playwright:
     assert page.title().startswith('Climate Justice for Nepal')
     assert page.locator('h1').count() == 1
     assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'), 'Desktop horizontal overflow'
-    assert page.locator('[data-metric="deaths"]').inner_text() == '1,367'
+    assert page.locator('[data-metric="deaths"]').inner_text() == '1,411'
     assert page.locator('#hero-title .hero-number [data-count]').count() == 2
     assert page.locator('#hero-title').get_attribute('aria-label') or 'Did you know' in page.locator('#hero-title').inner_text()
     assert page.locator('.hero + #impact').count() == 1
     page.locator('[data-metric="deaths"]').scroll_into_view_if_needed()
-    page.wait_for_function('document.querySelector("[data-metric=deaths]").textContent !== "1,367"')
-    page.wait_for_function('document.querySelector("[data-metric=deaths]").textContent === "1,367"')
-    page.wait_for_function('document.querySelector("[data-metric=damage]").textContent === "$2.56B"')
-    assert '6.0% of Nepal’s 2024 GDP' in page.locator('[data-metric="damage"]').locator('xpath=..').inner_text()
+    page.wait_for_function('document.querySelector("[data-metric=deaths]").textContent !== "1,411"')
+    page.wait_for_function('document.querySelector("[data-metric=deaths]").textContent === "1,411"')
+    page.wait_for_function('document.querySelector("[data-metric=damage]").textContent === "$1.80B"')
+    assert '4.0% of Nepal’s 2025 GDP' in page.locator('[data-metric="damage"]').locator('xpath=..').inner_text()
+    snapshot = json.loads(Path('data/impact.json').read_text())
+    assert page.locator('.impact-stat').count() == len(snapshot['metrics']) == 8
+    for key, metric in snapshot['metrics'].items():
+        card = page.locator(f'[data-metric="{key}"]').locator('xpath=..')
+        assert card.locator('h3').inner_text() == metric['label']
+        assert metric['summary'] in card.locator('p').inner_text()
+        assert metric['source'] in page.locator(f'[data-source="{key}"]').inner_text()
+        assert page.locator(f'[data-source="{key}"]').get_attribute('href') == metric['url']
+
     page.evaluate('window.scrollTo({top: 0, behavior: "instant"})')
     assert page.locator('a.donate-link').count() == 4
     assert page.locator('a.donate-link[href="https://rescue.opmcm.gov.np/offer-help"]').count() == 1
@@ -133,8 +142,8 @@ with sync_playwright() as playwright:
     phone.wait_for_function('Array.from(document.images).filter(image => image.getAttribute("src")).every(image => image.complete && image.naturalWidth > 0)')
     assert phone.evaluate('document.documentElement.scrollWidth <= innerWidth'), 'Mobile horizontal overflow'
     assert phone.locator('#hero-video').evaluate('(video) => video.paused && !video.getAttribute("src")')
-    assert phone.locator('.hero-number [data-count]').all_text_contents() == ['0.37', '0.01']
-    assert all(sample['text'] == ['0.37', '0.01'] for sample in phone.evaluate('window.heroCounterTrace')), 'Reduced motion animates the hero numbers'
+    assert phone.locator('.hero-number [data-count]').all_text_contents() == ['0.36', '0.01']
+    assert all(sample['text'] == ['0.36', '0.01'] for sample in phone.evaluate('window.heroCounterTrace')), 'Reduced motion animates the hero numbers'
     phone.screenshot(path=str(OUTPUT / 'mobile.png'), full_page=True)
     phone.locator('.menu-toggle').click()
     assert phone.locator('#mobile-nav').is_visible()
@@ -151,7 +160,7 @@ with sync_playwright() as playwright:
     fallback = offline.new_page()
     fallback.route('**/data/impact.json', lambda route: route.abort())
     fallback.goto(BASE, wait_until='networkidle')
-    assert fallback.locator('[data-metric="deaths"]').inner_text() == '1,367'
+    assert fallback.locator('[data-metric="deaths"]').inner_text() == '1,411'
     assert 'temporarily unavailable' in fallback.locator('#data-status').inner_text()
     malformed = browser.new_context(reduced_motion='reduce')
     invalid = malformed.new_page()
@@ -159,12 +168,30 @@ with sync_playwright() as playwright:
     snapshot['metrics']['deaths']['asOf'] = '2026-02-31'
     invalid.route('**/data/impact.json', lambda route: route.fulfill(json=snapshot))
     invalid.goto(BASE, wait_until='networkidle')
-    assert invalid.locator('[data-metric="deaths"]').inner_text() == '1,367'
+    assert invalid.locator('[data-metric="deaths"]').inner_text() == '1,411'
     assert 'temporarily unavailable' in invalid.locator('#data-status').inner_text()
+    updated = browser.new_context(reduced_motion='reduce')
+    update_page = updated.new_page()
+    revised = json.loads(Path('data/impact.json').read_text())
+    revised['metrics']['injured'].update(value=10050, display='10,050', label='Updated treatment count',
+                                       summary='Updated report definition.', source='New reporting agency', asOf='2026-09-20')
+    revised['metrics']['damage'].update(value=2000000000, display='$2.00B')
+    update_page.route('**/data/impact.json', lambda route: route.fulfill(json=revised))
+    update_page.goto(BASE, wait_until='networkidle')
+    updated_card = update_page.locator('[data-metric="injured"]').locator('xpath=..')
+    assert updated_card.locator('h3').inner_text() == 'Updated treatment count'
+    assert updated_card.locator('p').inner_text() == 'Updated report definition.'
+    assert 'New reporting agency · 20 Sep 2026' in updated_card.inner_text().replace('Sept ', 'Sep ')
+    assert '4.4% of Nepal’s 2025 GDP' in update_page.locator('#economic-comparison').inner_text()
+    assert update_page.locator('[data-metric="damage"]').inner_text() == '$2.00B'
+
     nojs = browser.new_context(java_script_enabled=False)
     static = nojs.new_page()
     static.goto(BASE)
-    assert static.locator('[data-metric="missing"]').inner_text() == '5,132'
+    assert static.locator('[data-metric="missing"]').inner_text() == '5,875'
+    for key, metric in json.loads(Path('data/impact.json').read_text())['metrics'].items():
+        assert static.locator(f'[data-metric="{key}"]').inner_text() == metric['display']
+
     assert static.locator('a.donate-link').count() == 4
     assert static.locator('#gallery .gallery-card').count() == 3
     assert static.locator('#gallery .gallery-card h3').first.inner_text().strip()
